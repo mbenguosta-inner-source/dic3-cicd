@@ -1,16 +1,17 @@
-name: Node.js CI and Docker
+name: Test & build (Multi job)
 
 on:
   push:
     branches:
-      - mb
+      - main
   pull_request:
     branches:
-      - mb
+      - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    name: Test Node.js application
 
     steps:
       # Step 1: Check out the repository
@@ -35,21 +36,30 @@ jobs:
       - name: Run Unit Tests
         run: npm test
 
-      # Step 6: Log in to Docker Hub using secrets
+  build:
+    runs-on: ubuntu-latest
+    name: Build & Push Docker image
+    needs: test  # This ensures the build job only runs if the test job passes
+
+    steps:
+      # Step 1: Check out the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Log in to Docker Hub using secrets
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Step 7: Build the Docker image
+      # Step 3: Build the Docker image
       - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/cicdapp:${{ github.sha }} .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/cicd-node-app:${{ github.sha }} .
 
-      # Step 8: Push the Docker image to Docker Hub
+      # Step 4: Push the Docker image to Docker Hub
       - name: Push Docker image to Docker Hub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/cicdapp:${{ github.sha }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/cicd-node-app:${{ github.sha }}
 
       # Optional: Tag the Docker image with `latest`
       - name: Tag Docker image with 'latest'
         run: |
-          docker tag ${{ secrets.DOCKER_USERNAME }}/cicdapp:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/cicdapp:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/cicdapp:latest
-
+          docker tag ${{ secrets.DOCKER_USERNAME }}/cicd-node-app:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/cicd-node-app:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/cicd-node-app:latest
