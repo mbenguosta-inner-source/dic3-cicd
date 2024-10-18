@@ -91,7 +91,7 @@ jobs:
   staging:
     runs-on: ubuntu-latest
     name: Build & Push (staging)
-    needs: dev
+    needs: [dev, security]
     env:
       environment: staging
 
