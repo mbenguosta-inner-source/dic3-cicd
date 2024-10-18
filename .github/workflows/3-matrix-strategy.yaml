@@ -3,10 +3,10 @@ name: Node.js CI and Docker
 on:
   push:
     branches:
-      - main
+      - MB
   pull_request:
     branches:
-      - main
+      - MB
 
 jobs:
   test:
@@ -45,7 +45,7 @@ jobs:
 
     strategy:
       matrix:
-        environment: [dev, staging, prod]  # Define the environment matrix
+        environment: [DEV, STAGING, PROD]  # Define the environment matrix
 
     steps:
       - name: Checkout code
@@ -65,4 +65,3 @@ jobs:
         run: |
           docker tag ${{ secrets.DOCKER_USERNAME }}/cicdapp:${{ matrix.environment }}-${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/cicdapp:${{ matrix.environment }}-latest
           docker push ${{ secrets.DOCKER_USERNAME }}/cicdapp:${{ matrix.environment }}-latest
-

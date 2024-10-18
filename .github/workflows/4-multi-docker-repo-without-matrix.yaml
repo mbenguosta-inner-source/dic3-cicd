@@ -1,0 +1,141 @@
+name: CICD WITH Docker
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test
+
+    strategy:
+      matrix:
+        environment: [dev, staging, prod]  # Define the environment matrix
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # Use a specific Node.js version
+
+      - name: Install dependencies
+        run: npm install
+
+      # Conditionally run ESLint only for the 'dev' environment
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Unit Tests
+        run: npm test
+
+  security:
+    runs-on: ubuntu-latest
+    name: Security Scanning
+    needs: test  # Ensure this runs after the test job
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget
+          TRIVY_VERSION=0.43.0
+          wget "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb"
+          sudo dpkg -i "trivy_${TRIVY_VERSION}_Linux-64bit.deb"
+          rm "trivy_${TRIVY_VERSION}_Linux-64bit.deb"
+
+      - name: Run Trivy scan
+        run: trivy fs --exit-code 1 --severity HIGH,CRITICAL .
+
+      - name: Fail if vulnerabilities found
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Vulnerabilities found!";
+            exit 1;
+          fi
+  dev:
+    runs-on: ubuntu-latest
+    name: Build & Push (dev)
+    needs: test
+    env:
+      environment: dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DEV_DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DEV_DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker image for ${{ env.environment }}
+        run: |
+          docker build -t ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} .
+
+      - name: Push Docker image for ${{ env.environment }}
+        run: docker push ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }}
+
+      - name: Tag Docker image with 'latest' for ${{ env.environment }}
+        run: |
+          docker tag ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
+          docker push ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
+
+  staging:
+    runs-on: ubuntu-latest
+    name: Build & Push (staging)
+    needs: dev
+    env:
+      environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.STAGING_DOCKER_PASSWORD }}" | docker login -u "${{ secrets.STAGING_DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker image for ${{ env.environment }}
+        run: |
+          docker build -t ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} .
+
+      - name: Push Docker image for ${{ env.environment }}
+        run: docker push ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }}
+
+      - name: Tag Docker image with 'latest' for ${{ env.environment }}
+        run: |
+          docker tag ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
+          docker push ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
+
+  prod:
+    runs-on: ubuntu-latest
+    name: Build & Push (prod)
+    needs: [dev, staging, security]
+    env:
+      environment: prod
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.PROD_DOCKER_PASSWORD }}" | docker login -u "${{ secrets.PROD_DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker image for ${{ env.environment }}
+        run: |
+          docker build -t ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} .
+
+      - name: Push Docker image for ${{ env.environment }}
+        run: docker push ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }}
+
+      - name: Tag Docker image with 'latest' for ${{ env.environment }}
+        run: |
+          docker tag ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
+          docker push ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
