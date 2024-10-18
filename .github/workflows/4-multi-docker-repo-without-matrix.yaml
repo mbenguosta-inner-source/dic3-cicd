@@ -78,15 +78,15 @@ jobs:
 
       - name: Build Docker image for ${{ env.environment }}
         run: |
-          docker build -t ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} .
+          docker build -t ${{ secrets.DEV_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }} .
 
       - name: Push Docker image for ${{ env.environment }}
-        run: docker push ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }}
+        run: docker push ${{ secrets.DEV_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }}
 
       - name: Tag Docker image with 'latest' for ${{ env.environment }}
         run: |
-          docker tag ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
-          docker push ${{ secrets.DEV_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
+          docker tag ${{ secrets.DEV_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }} ${{ secrets.DEV_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-latest
+          docker push ${{ secrets.DEV_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-latest
 
   staging:
     runs-on: ubuntu-latest
@@ -104,15 +104,15 @@ jobs:
 
       - name: Build Docker image for ${{ env.environment }}
         run: |
-          docker build -t ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} .
+          docker build -t ${{ secrets.STAGING_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }} .
 
       - name: Push Docker image for ${{ env.environment }}
-        run: docker push ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }}
+        run: docker push ${{ secrets.STAGING_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }}
 
       - name: Tag Docker image with 'latest' for ${{ env.environment }}
         run: |
-          docker tag ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
-          docker push ${{ secrets.STAGING_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
+          docker tag ${{ secrets.STAGING_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }} ${{ secrets.STAGING_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-latest
+          docker push ${{ secrets.STAGING_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-latest
 
   prod:
     runs-on: ubuntu-latest
@@ -130,12 +130,12 @@ jobs:
 
       - name: Build Docker image for ${{ env.environment }}
         run: |
-          docker build -t ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} .
+          docker build -t ${{ secrets.PROD_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }} .
 
       - name: Push Docker image for ${{ env.environment }}
-        run: docker push ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }}
+        run: docker push ${{ secrets.PROD_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }}
 
       - name: Tag Docker image with 'latest' for ${{ env.environment }}
         run: |
-          docker tag ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-${{ github.sha }} ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
-          docker push ${{ secrets.PROD_DOCKER_USERNAME }}/cicd-node-app:${{ env.environment }}-latest
+          docker tag ${{ secrets.PROD_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-${{ github.sha }} ${{ secrets.PROD_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-latest
+          docker push ${{ secrets.PROD_DOCKER_USERNAME }}/dicnodeapp:${{ env.environment }}-latest
