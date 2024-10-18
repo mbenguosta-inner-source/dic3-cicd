@@ -3,10 +3,10 @@ name: Test & build (Multi job)
 on:
   push:
     branches:
-      - main
+      - mb
   pull_request:
     branches:
-      - main
+      - mb
 
 jobs:
   test:
